@@ -31,81 +31,80 @@ public class MineButton : MonoBehaviour, IPointerClickHandler
 
     List<Vector2Int> neighbors = new List<Vector2Int>();
 
-    public float GetProbability(){
-        if(state != State.notfound){
-            return 0f;
-        }
-        if(value == -1){
-            return 0f;
-        }
+    // public float GetProbability(){
+    //     if(state != State.notfound){
+    //         return 0f;
+    //     }
+    //     if(value == -1){
+    //         return 0f;
+    //     }
         
-        float ret = 1f;
-        Debug.Log(neighbors.Count);
-        foreach(Vector2Int p in neighbors){
-            MineButton but = controller.buttonRows[p.x].buttons[p.y];
-            Debug.Log("Neighbor value: " + but.value.ToString());
-            if(but.state == State.found){
-                return 0f;
-            } else if (but.value == -1){
-                //Debug.Log(ret);
-                ret += controller.prob;
-            }
-        } 
-        Debug.Log("ret: " + ret.ToString());
-        return ret;
-    }
+    //     float ret = 1f;
+    //     Debug.Log(neighbors.Count);
+    //     foreach(Vector2Int p in neighbors){
+    //         MineButton but = controller.buttonRows[p.x].buttons[p.y];
+    //         Debug.Log("Neighbor value: " + but.value.ToString());
+    //         if(but.state == State.found){
+    //             return 0f;
+    //         } else if (but.value == -1){
+    //             //Debug.Log(ret);
+    //             ret += controller.prob;
+    //         }
+    //     } 
+    //     Debug.Log("ret: " + ret.ToString());
+    //     return ret;
+    // }
 
     void Start(){
         // suspect = GetProbability();
         neighbors.AddRange(GameController.GetNeighbors(pos.x, pos.y));
-        Debug.Log(GameController.GetNeighbors(pos.x, pos.y).Count);
+        //Debug.Log(GameController.GetNeighbors(pos.x, pos.y).Count);
     }
 
-    void Update() {
-        timer += Time.deltaTime;
-        //Debug.Log(timer);
-        var rand = new System.Random();
-        if(timer >= 2.0f){
-            timer = 0f;
-            if(value == 0 || state == State.found || value == -1){
-                return;
-            }
-            if(rand.NextDouble() * 10 < probvalue * controller.prob){
-                controller.gameboard[pos.x, pos.y] = -1;
-                controller.mineNumber += 1;
-                controller.remainingBlank += -1;
-                controller.remainMines += 1;
-                Debug.Log("mine generated");
-                for(int x = -1; x < 2; x++){
-                    for(int y = -1; y < 2; y++){
-                        if(pos.x + x >= 0 && pos.y + y >= 0 && pos.x + x < 10 && pos.y + y < 10 && controller.gameboard[pos.x + x, pos.y + y] != -1){
-                            controller.gameboard[pos.x + x, pos.y + y] += 1;
-                            controller.buttonRows[pos.x + x].buttons[pos.y + y].value += 1;
-                        }
-                    }
-                }
-                SetState(State.mine);
-                UpdateState();
-            }
-            controller.UpdateState();
-        }
-    }
+    // void Update() {
+    //     timer += Time.deltaTime;
+    //     //Debug.Log(timer);
+    //     if(timer >= 2.0f){
+    //         timer = 0f;
+    //         if(value == 0 || state == State.found || value == -1){
+    //             return;
+    //         }
+    //         if(rand.NextDouble() * 10 < probvalue * controller.prob){
+    //             controller.gameboard[pos.x, pos.y] = -1;
+    //             controller.mineNumber += 1;
+    //             controller.remainingBlank += -1;
+    //             controller.remainMines += 1;
+    //             Debug.Log("mine generated");
+    //             for(int x = -1; x < 2; x++){
+    //                 for(int y = -1; y < 2; y++){
+    //                     if(pos.x + x >= 0 && pos.y + y >= 0 && pos.x + x < 10 && pos.y + y < 10 && controller.gameboard[pos.x + x, pos.y + y] != -1){
+    //                         controller.gameboard[pos.x + x, pos.y + y] += 1;
+    //                         controller.buttonRows[pos.x + x].buttons[pos.y + y].value += 1;
+    //                     }
+    //                 }
+    //             }
+    //             SetState(State.mine);
+    //             UpdateState();
+    //         }
+    //         controller.UpdateState();
+    //     }
+    // }
 
     public void SetState(State newstate) {
         state = newstate;
     }
 
     public void UpdateState() {
-        foreach(Vector2Int p in neighbors){
-            if(controller.buttonRows[p.x].buttons[p.y].state == State.found){
-                probvalue = 0f;
-            }else{
-                probvalue = value;
-            }
-        }
+        // foreach(Vector2Int p in neighbors){
+        //     if(controller.buttonRows[p.x].buttons[p.y].state == State.found){
+        //         probvalue = 0f;
+        //     }else{
+        //         probvalue = value;
+        //     }
+        // }
 
         text.text = value == 0 ? "" : value.ToString();
-        timer = 0f;
+        //timer = 0f;
         // suspect = GetProbability();
         if(state == State.notfound){
             SetTag("notfound");
@@ -152,9 +151,21 @@ public class MineButton : MonoBehaviour, IPointerClickHandler
             if(state == State.flag){
                 state = State.notfound;
                 controller.remainMines += 1;
+                controller.flagCount -= 1;
+                if(controller.gameboard[pos.x, pos.y] == -1){
+                    controller.correct += -1;
+                }else {
+                    controller.wrong += -1;
+                }
             } else if (state == State.notfound){
                 state = State.flag;
+                controller.flagCount += 1;
                 controller.remainMines += -1;
+                if(controller.gameboard[pos.x, pos.y] == -1){
+                    controller.correct += 1;
+                }else {
+                    controller.wrong += 1;
+                }
             }
             UpdateState();
             Debug.Log("Right click: " + value.ToString());

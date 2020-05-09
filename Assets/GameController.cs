@@ -16,14 +16,30 @@ public class GameController : MonoBehaviour
     public GameObject losePanel;
     public GameObject infectLose;
     public GameObject stepMineLose;
-    public int highScore;
-    public float prob;
+    public float genProb;
 
     public int remainingBlank;
+    public int activeMines = 0;
+
+    List<Vector2Int> mineLocations = new List<Vector2Int>();
+
+
+    // for calculating score:
+    public TMPro.TextMeshProUGUI scoreDisplay;
+    public TMPro.TextMeshProUGUI recordDisplay;
+    public double flagCount = 0.0;
+    int score;
+    int record = 0;
+    double timeCount = 0.0;
+    public double correct;
+    public double wrong;
+
 
     // Start is called before the first frame update
     void Start()
     {
+        // PlayerPrefs.DeleteAll();
+        gameState = -10;
         remainMines = mineNumber;
         for(int i = 0; i < 10; i++){
             for(int j = 0; j < 10; j++){
@@ -32,46 +48,83 @@ public class GameController : MonoBehaviour
             }
         }
         remainingBlank = 10 * 10 - mineNumber;
+        record = PlayerPrefs.GetInt("record", -1000);
+        onClickNewGame();
     }
 
-    // float timer;
-    // void Update() {
-    //     timer += Time.deltaTime;
-    //     //Debug.Log(timer);
-    //     var rand = new System.Random();
-    //     if(timer >= 1.0f){
-    //         timer = 0f;
-    //         if(rand.NextDouble() > 1 / suspect){
-    //             controller.gameboard[pos.x, pos.y] = -1;
-    //             controller.mineNumber += 1;
-    //             controller.remainingBlank += -1;
-    //             controller.remainMines += 1;
-    //             SetState(State.mine);
-    //             UpdateState();
-    //             Debug.Log("mine generated");
-    //         }
-    //     }
-    // }
+    float timer;
+    List<Vector2Int> possible;
+    void Update() {
+        timer += Time.deltaTime;
+        //Debug.Log(timer);
+        var rand = new System.Random();
+        if(allowUpdate){
+            if(timer >= 0.5f){
+                timer = 0f;
+                timeCount += 1;
+                possible = GetPossibleGrowingLocations();
+                if(rand.NextDouble() < genProb * possible.Count){
+                    Vector2Int genPos = possible[rand.Next(0, possible.Count)];
+                    gameboard[genPos.x, genPos.y] = -1;
+                    mineNumber += 1;
+                    remainingBlank += -1;
+                    remainMines += 1;
+                    foreach(Vector2Int neighbor in GetNeighbors(genPos.x, genPos.y)){
+                        if(gameboard[neighbor.x, neighbor.y] != -1){
+                            gameboard[neighbor.x, neighbor.y] += 1;
+                        }
+                    }
+                    // buttonRows[genPos.x].buttons[genPos.y].SetState(State.mine); TESTING
+                    //buttonRows[genPos.x].buttons[genPos.y].UpdateState();
+                    mineLocations.Add(genPos);
+                    Debug.Log("mine generated");
+                }
+                UpdateState();
+            }
+        }
+    }
 
-    // public void UpdateProbability() {
-
-    // }
+    bool allowUpdate = true;
 
     public void UpdateState() {
+        for(int i = 0; i < 10; i++){
+            for(int j = 0; j < 10; j++){
+                // if(gameboard[i, j] == -1){
+                //     buttonRows[i].buttons[j].SetState(State.mine);
+                // } TESTING
+                buttonRows[i].buttons[j].value = gameboard[i, j];
+                buttonRows[i].buttons[j].UpdateState();
+            }
+        }
+
         remainMinesDisplay.text = "Mines remaining: " + remainMines.ToString();
         
         // check for win / lose
+        
         if(remainingBlank == 0){
             gameState = 1;
         }
-        if(remainMines >= 10 * 10){
+        if(remainMines + flagCount >= 10 * 10){
             gameState = -1;
         }
+        if(gameState == 0){
+            score = (int)( 600 * 100 / (mineNumber + 5) / (timeCount * 2 + 1));
+        }
+        if(gameState != 0){
+            score = (int)((600 * 100 / (mineNumber + 5) / (timeCount * 2 + 1)) + correct * 1.0 - wrong * 1.0 + (gameState == 1 ? 1 : -1) * 800.0);
+            if(score > record && score != 3000){
+                record = (int)score;
+                PlayerPrefs.SetInt("record", record);
+            }
+        }
+        
+        scoreDisplay.text = "Score: " + score.ToString();
+        recordDisplay.text = "Record: " + record.ToString();
         winPanel.SetActive(gameState == 1);
         losePanel.SetActive(gameState < 0);
         infectLose.SetActive(gameState == -1);
         stepMineLose.SetActive(gameState == -2);
-        // Debug.Log(remainingBlank);
+        allowUpdate = gameState == 0;
     }
 
     public static List<Vector2Int> GetNeighbors(int x, int y){
@@ -89,6 +142,15 @@ public class GameController : MonoBehaviour
 
     public void onClickNewGame() {
         gameState = 0;
+        mineNumber = 15;
+        timeCount = 0.0;
+        flagCount = 0;
+        correct = 0;
+        wrong = 0;
+        //score = (int)( 100 * 100 / (mineNumber + 5) / (timeCount * 2 + 10));
+        allowUpdate = true;
+        mineLocations = new List<Vector2Int>();
+        activeMines = mineNumber;
         for(int i = 0; i < 10; i++){
             for(int j = 0; j < 10; j++){
                 gameboard[i, j] = 0;
@@ -100,13 +162,13 @@ public class GameController : MonoBehaviour
 
         for(int i = 0; i < 10; i++){
             for(int j = 0; j < 10; j++){
-                buttonRows[i].buttons[j].SetState(gameboard[i, j] == -1 ? State.mine : State.notfound);
+                buttonRows[i].buttons[j].SetState(State.notfound);
                 buttonRows[i].buttons[j].value = gameboard[i, j];
                 buttonRows[i].buttons[j].UpdateState();
             }
         }
         UpdateState();
-        Debug.Log(remainingBlank);
+        //Debug.Log(remainingBlank);
     }
 
     public void onClickQuit() {
@@ -134,6 +196,8 @@ public class GameController : MonoBehaviour
             possible.RemoveAt(index);
             Debug.Log(row.ToString() + " " + col.ToString());
             gameboard[row, col] = -1;
+
+            mineLocations.Add(new Vector2Int(row, col));
 
             // generating surrounding numbers
             for(int x = -1; x < 2; x++){
@@ -195,7 +259,28 @@ public class GameController : MonoBehaviour
             }
         }
     }
-}
 
-// TODO: 
-//
+    public List<Vector2Int> GetPossibleGrowingLocations() {
+        List<Vector2Int> pLoc = new List<Vector2Int>();
+        bool isgood = true;
+        foreach(Vector2Int mine in mineLocations){
+            foreach(Vector2Int candidate in GetNeighbors(mine.x, mine.y)){
+                //one candidate can be added multiple times
+                //verifying candidate
+                if(gameboard[candidate.x, candidate.y] != -1 && buttonRows[candidate.x].buttons[candidate.y].state != State.found){
+                    foreach(Vector2Int a in GetNeighbors(candidate.x, candidate.y)){
+                        if(buttonRows[a.x].buttons[a.y].state == State.found){
+                            isgood = false;
+                            break;
+                        }
+                    }
+                    if(isgood){
+                        pLoc.Add(candidate);
+                    }
+                }
+                isgood = true;
+            };
+        }
+        return pLoc;
+    }
+}

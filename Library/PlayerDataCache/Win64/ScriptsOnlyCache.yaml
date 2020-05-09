@@ -608,7 +608,7 @@ ScriptsOnlyBuild:
     className: TMP_SpriteAnimator
   - hash:
       serializedVersion: 2
-      Hash: 05f49cbfd6900c9ce03797be4e6968e2
+      Hash: 78f1c98beaa4daf5851edcd841232b52
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: GameController
@@ -620,7 +620,7 @@ ScriptsOnlyBuild:
     className: TextContainer
   - hash:
       serializedVersion: 2
-      Hash: ac60e6bdd5c5ab1b510cb3b2c0ac23e8
+      Hash: 58cb41146770fd611e7677d020c0b929
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: MineButton
@@ -759,4 +759,4 @@ ScriptsOnlyBuild:
   platform: 19
   scenePathNames:
   - Assets/Scenes/Scene.unity
-  playerPath: C:/Users/City from Naught/Desktop/Minesweeper/COVIDSweet Test/Minesweeper.exe
+  playerPath: C:/Users/City from Naught/Desktop/COVIDsweeper1.0/COVIDsweeper.exe
