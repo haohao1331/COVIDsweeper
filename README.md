@@ -3,6 +3,8 @@ A minesweeper game but the mines will spread to adjacent tiles if you don't find
 
 ![Game Icon](Assets/Sprite/dead.png)
 
+Available download at: https://github.com/haohao1331/COVIDsweeper-download
+
 ## Basic Game Mechanics
 Left click to open tile and right click to flag, just like classic minesweeper. Mines can only spread to the 8 adjacent tiles
 surrounding it. They cannot infect tiles that are adjacent to found numbers, or else that would make those numbers change!
